@@ -1,0 +1,69 @@
+Algorithm 3.1: PSO-Based Hybrid Microgrid Optimal Sizing
+
+1:  INPUTS:
+      Load_Profile (P_load), Solar_Data (G, T)
+      Economic_Params (C_PV, C_Batt, C_DG, C_fuel)
+      PSO_Params: Swarm_Size (N=25), Max_Iter (K=30), w, c1, c2
+      Constraints: LB = [300, 500, 20], UB = [2500, 6000, 600]
+
+2:  INITIALIZATION:
+      For i = 1 to N do:
+          Initialize Position x_i = random(LB, UB)
+          Initialize Velocity v_i = 0
+          Evaluate Fitness J_i(x_i)
+          Set P_best_i = x_i
+      End For
+      Set G_best = min(P_best)
+      Set Iteration k = 1
+
+3:  WHILE k <= Max_Iter DO:
+      
+      For i = 1 to N do:
+          
+          % --- CO-SIMULATION INTERFACE ---
+          Assign x_i (PV, Batt, DG) to MATLAB Workspace
+          Run Simulink Model ('hybrid_microgrid_model')
+          Extract Outputs: DG_Power, Unmet_Load, SOC_Profile
+          
+          % --- METRIC CALCULATION ---
+          Calculate Annual_Cost (CAPEX + OPEX)
+          Calculate LPSP (Reliability Index)
+          Calculate Renewable_Share (RF)
+          
+          % --- OBJECTIVE FUNCTION EVALUATION ---
+          Calculate Fitness J_current:
+          J = 0.7*(Norm_Cost) + 0.2*(Norm_LPSP) + 0.1*(1 - RF)
+          
+          % --- UPDATE PERSONAL BEST ---
+          IF J_current < J(P_best_i) THEN
+              P_best_i = x_i
+          END IF
+          
+          % --- UPDATE GLOBAL BEST ---
+          IF J_current < J(G_best) THEN
+              G_best = x_i
+          END IF
+          
+      End For
+      
+      % --- UPDATE PARTICLE DYNAMICS ---
+      For i = 1 to N do:
+          Update Velocity v_i:
+          v_i = w*v_i + c1*rand()*(P_best_i - x_i) + c2*rand()*(G_best - x_i)
+          
+          Update Position x_i:
+          x_i = x_i + v_i
+          
+          % --- BOUNDARY CONTROL ---
+          Enforce Limits: x_i = max(min(x_i, UB), LB)
+      End For
+      
+      Increment k = k + 1
+
+4:  END WHILE
+
+5:  OUTPUT:
+      Optimal Sizing Vector x_opt = G_best
+      Performance Metrics (Cost, LPSP, RF) based on G_best
+
+6:  STOP

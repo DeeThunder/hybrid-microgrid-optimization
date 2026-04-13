@@ -1,0 +1,11 @@
+# MATLAB and Simulink cache files
+*.slxc
+slprj/
+*.asv
+
+# Backup files
+hybrid_microgrid_model_22.slx
+
+# We will let Results/ be tracked so users see an example of output,
+# but usually it might be ignored. If you want to ignore it, uncomment below:
+# Results/
